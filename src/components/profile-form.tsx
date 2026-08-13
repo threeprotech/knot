@@ -139,7 +139,9 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
         avatar_url,
       };
 
-      const { error: profileError } = await supabase.from("profiles").upsert(payload);
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(payload, { defaultToNull: false });
       if (profileError) throw profileError;
 
       const { error: deleteError } = await supabase

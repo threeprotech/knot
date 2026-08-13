@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Avatar } from "@/components/avatar";
-import type { Industry, Profile, Skill, SkillCategory } from "@/lib/types";
+import { AlertsStrip } from "@/components/alerts-strip";
+import type { Alert, Industry, Profile, Skill, SkillCategory } from "@/lib/types";
 
 type DirectoryProfile = Profile & {
   industries: Industry | null;
@@ -15,11 +16,12 @@ type Props = {
   profiles: DirectoryProfile[];
   industries: Industry[];
   skills: Skill[];
+  alerts?: Alert[];
 };
 
 const CATEGORIES: SkillCategory[] = ["Technical", "Soft", "Domain"];
 
-export function DirectoryClient({ profiles, industries, skills }: Props) {
+export function DirectoryClient({ profiles, industries, skills, alerts = [] }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -68,6 +70,11 @@ export function DirectoryClient({ profiles, industries, skills }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+      {alerts.length > 0 && (
+        <div className="mb-6 animate-fade-up">
+          <AlertsStrip alerts={alerts} />
+        </div>
+      )}
       <div className="animate-fade-up">
         <h1 className="font-display text-3xl tracking-tight text-ink sm:text-4xl">Alumni directory</h1>
         <p className="mt-2 max-w-xl text-muted">

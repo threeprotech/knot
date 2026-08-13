@@ -1,7 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const protectedPrefixes = ["/directory", "/profile", "/onboarding"];
+const protectedPrefixes = ["/directory", "/profile", "/onboarding", "/admin"];
+
+function isProtectedPath(path: string) {
+  if (protectedPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+    return true;
+  }
+  // Events list is members-only; /events/[id] stays public for public events.
+  return path === "/events" || path === "/events/";
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -32,11 +40,8 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isProtected = protectedPrefixes.some(
-    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
-  );
 
-  if (isProtected && !user) {
+  if (isProtectedPath(path) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/sign-in";
     url.searchParams.set("next", path);
