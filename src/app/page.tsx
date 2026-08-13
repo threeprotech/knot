@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { AlumniMapLoader } from "@/components/alumni-map-loader";
+import { MAP_HEIGHT_HOME } from "@/components/map-shell";
 import { PublicHomeFeed } from "@/components/public-home-feed";
 import { isActiveAlert, isUpcomingOrActiveEvent, sortAlertsByStart, sortEventsByStart } from "@/lib/feed";
 import type { Alert, AlumniEvent } from "@/lib/types";
@@ -99,28 +101,48 @@ export default async function HomePage() {
               Stay tied to the people who share your craft.
             </h1>
             <p
-              className="animate-fade-up mt-4 max-w-md text-base leading-relaxed text-muted sm:text-lg"
+              className="animate-fade-up mt-4 max-w-md text-base leading-relaxed text-ink-soft sm:text-lg"
               style={{ animationDelay: "200ms" }}
             >
-              Register your profile, map your skills and industry, and find alumni ready to connect.
+              Create your profile to connect, share memories, and exchange opportunities.
             </p>
             <div
-              className="animate-fade-up mt-8 flex flex-col gap-3 sm:flex-row"
+              className="animate-fade-up mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
               style={{ animationDelay: "280ms" }}
             >
               <Link
                 href="/auth/sign-up"
-                className="inline-flex items-center justify-center rounded-lg bg-coral px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-coral-deep"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-coral px-8 py-3.5 text-base font-semibold text-white shadow-md shadow-coral/30 transition hover:bg-coral-deep sm:w-auto"
               >
-                Join the network
+                Register
               </Link>
               <Link
                 href="/auth/sign-in"
-                className="inline-flex items-center justify-center rounded-lg border border-ink/15 bg-white/70 px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white"
+                className="inline-flex w-full items-center justify-center rounded-lg border border-ink/15 bg-white/70 px-6 py-3 text-sm font-semibold text-ink transition hover:bg-white sm:w-auto"
               >
                 Sign in
               </Link>
+              <Link
+                href="#alumni-map"
+                className="inline-flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-coral transition hover:bg-white/50 sm:w-auto"
+              >
+                Alumni map
+              </Link>
             </div>
+          </div>
+        </div>
+      </section>
+      <section
+        id="alumni-map"
+        className="scroll-mt-16 border-t border-line/70 bg-surface"
+      >
+        <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8 sm:py-12">
+          <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">Alumni map</h2>
+          <p className="mt-2 max-w-xl text-sm text-muted">
+            Names on the map. Sign in to open a profile.
+          </p>
+          <div className="mt-5">
+            <AlumniMapLoader isSignedIn={false} className={MAP_HEIGHT_HOME} />
           </div>
         </div>
       </section>

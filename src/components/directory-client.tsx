@@ -5,7 +5,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { AlertsStrip } from "@/components/alerts-strip";
-import type { Alert, Industry, Profile, Skill, SkillCategory } from "@/lib/types";
+import { AlumniMapLoader } from "@/components/alumni-map-loader";
+import { MAP_HEIGHT_DIRECTORY } from "@/components/map-shell";
+import { formatClassDivision, type Alert, type Industry, type Profile, type Skill, type SkillCategory } from "@/lib/types";
 
 type DirectoryProfile = Profile & {
   industries: Industry | null;
@@ -70,17 +72,22 @@ export function DirectoryClient({ profiles, industries, skills, alerts = [] }: P
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-      {alerts.length > 0 && (
-        <div className="mb-6 animate-fade-up">
-          <AlertsStrip alerts={alerts} />
-        </div>
-      )}
       <div className="animate-fade-up">
         <h1 className="font-display text-3xl tracking-tight text-ink sm:text-4xl">Alumni directory</h1>
         <p className="mt-2 max-w-xl text-muted">
           Search by name, industry, or skill to find members across the Knot network.
         </p>
       </div>
+
+      <div className="mt-6 animate-fade-up">
+        <AlumniMapLoader isSignedIn className={MAP_HEIGHT_DIRECTORY} />
+      </div>
+
+      {alerts.length > 0 && (
+        <div className="mt-6 animate-fade-up">
+          <AlertsStrip alerts={alerts} />
+        </div>
+      )}
 
       <div className="sticky top-14 z-30 -mx-4 mt-6 border-b border-line/70 bg-mist/95 px-4 py-3 backdrop-blur-md sm:mx-0 sm:rounded-xl sm:border sm:px-4">
         <form
@@ -183,6 +190,7 @@ export function DirectoryClient({ profiles, industries, skills, alerts = [] }: P
             .map((ps) => ps.skills)
             .filter(Boolean)
             .slice(0, 4);
+          const classDivision = formatClassDivision(profile.last_class, profile.last_division);
 
           return (
             <li
@@ -207,6 +215,7 @@ export function DirectoryClient({ profiles, industries, skills, alerts = [] }: P
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                         {profile.industries?.name && <span>{profile.industries.name}</span>}
                         {profile.location && <span>{profile.location}</span>}
+                        {classDivision && <span>{classDivision}</span>}
                         {profile.graduation_year && <span>Class of {profile.graduation_year}</span>}
                       </div>
                       {topSkills.length > 0 && (

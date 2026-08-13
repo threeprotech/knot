@@ -1,10 +1,26 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/avatar";
+import { MAP_HEIGHT_PICKER, MapPlaceholder } from "@/components/map-shell";
+import { geocodeLocation, reverseGeocode, type GeocodeResult } from "@/lib/geocode";
 import type { Industry, ProfileFormData, Skill, SkillCategory } from "@/lib/types";
+
+const LocationPickerMap = dynamic(() => import("@/components/location-picker-map"), {
+  ssr: false,
+  loading: () => (
+    <div className={MAP_HEIGHT_PICKER}>
+      <MapPlaceholder>Loading map…</MapPlaceholder>
+    </div>
+  ),
+});
+
+const LAST_CLASSES = ["VIII", "IX", "X", "XI", "XII"] as const;
+const LAST_DIVISIONS = ["A", "B", "C", "D", "E", "F"] as const;
 
 const CATEGORIES: SkillCategory[] = ["Technical", "Soft", "Domain"];
 
@@ -18,6 +34,8 @@ type Props = {
 export function ProfileForm({ mode, initial, industries, skills }: Props) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const geocodeGen = useRef(0);
   const [form, setForm] = useState<ProfileFormData>(initial);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(initial.avatar_url || null);
@@ -36,6 +54,58 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
   function update<K extends keyof ProfileFormData>(key: K, value: ProfileFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  useEffect(() => {
+    return () => {
+      if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+    };
+  }, []);
+
+  function onLocationTextChange(value: string) {
+    update("location", value);
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+
+    const trimmed = value.trim();
+    if (trimmed.length < 2) return;
+
+    const gen = ++geocodeGen.current;
+    geocodeTimer.current = setTimeout(async () => {
+      const coords = await geocodeLocation(trimmed);
+      if (geocodeGen.current !== gen) return;
+      if (!coords) return;
+      setForm((prev) => {
+        if (prev.location.trim() !== trimmed) return prev;
+        return { ...prev, latitude: coords.latitude, longitude: coords.longitude };
+      });
+    }, 700);
+  }
+
+  function onPinChange(coords: GeocodeResult | null) {
+    geocodeGen.current += 1;
+    if (geocodeTimer.current) {
+      clearTimeout(geocodeTimer.current);
+      geocodeTimer.current = null;
+    }
+
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        latitude: coords?.latitude ?? null,
+        longitude: coords?.longitude ?? null,
+      };
+
+      if (coords && !prev.location.trim()) {
+        void reverseGeocode(coords.latitude, coords.longitude).then((name) => {
+          if (!name) return;
+          setForm((current) => (current.location.trim() ? current : { ...current, location: name }));
+        });
+      }
+
+      return next;
+    });
+  }
+
+  const pinPlaced = hasPin(form.latitude, form.longitude);
 
   function toggleSkill(id: string) {
     setForm((prev) => {
@@ -124,6 +194,8 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
       if (!user) throw new Error("You must be signed in.");
 
       const avatar_url = await resolveAvatarUrl(user.id);
+      const location = form.location.trim();
+      const coords = await resolveCoordinates(form);
 
       const payload = {
         id: user.id,
@@ -134,7 +206,11 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
         headline: form.headline.trim() || null,
         bio: form.bio.trim() || null,
         graduation_year: form.graduation_year ? Number(form.graduation_year) : null,
-        location: form.location.trim() || null,
+        last_class: form.last_class.trim() || null,
+        last_division: form.last_division.trim() || null,
+        location: location || null,
+        latitude: coords?.latitude ?? null,
+        longitude: coords?.longitude ?? null,
         industry_id: form.industry_id || null,
         avatar_url,
       };
@@ -197,6 +273,15 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
         <p className="mt-2 text-muted">
           Map your industry and skills so others can find and connect with you.
         </p>
+        {mode === "edit" && pinPlaced && (
+          <p className="mt-3 text-sm text-ink-soft">
+            You’re on the{" "}
+            <Link href="/map" className="font-medium text-coral hover:text-coral-deep">
+              alumni map
+            </Link>
+            .
+          </p>
+        )}
       </div>
 
       {mode === "onboarding" && (
@@ -277,6 +362,44 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
                 placeholder="Product lead · fintech alumni mentor"
               />
             </Field>
+            <div className="rounded-xl border border-line/80 bg-white/70 p-4">
+              <p className="text-sm font-medium text-ink-soft">Last studied class</p>
+              <p className="mt-0.5 text-xs text-muted">Shown as XI - C in the directory. Optional.</p>
+              <div className="mt-3 grid grid-cols-[1fr_auto_1fr] gap-x-2 gap-y-1.5">
+                <span className="text-sm font-medium text-ink-soft">Class</span>
+                <span />
+                <span className="text-sm font-medium text-ink-soft">Division</span>
+                <select
+                  value={form.last_class}
+                  onChange={(e) => update("last_class", e.target.value)}
+                  className={inputClass}
+                  aria-label="Last studied class"
+                >
+                  <option value="">Select</option>
+                  {LAST_CLASSES.map((cls) => (
+                    <option key={cls} value={cls}>
+                      {cls}
+                    </option>
+                  ))}
+                </select>
+                <span className="self-center text-center font-display text-xl text-muted" aria-hidden>
+                  –
+                </span>
+                <select
+                  value={form.last_division}
+                  onChange={(e) => update("last_division", e.target.value)}
+                  className={inputClass}
+                  aria-label="Last studied division"
+                >
+                  <option value="">Select</option>
+                  {LAST_DIVISIONS.map((div) => (
+                    <option key={div} value={div}>
+                      {div}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <Field label="Bio">
               <textarea
                 value={form.bio}
@@ -297,14 +420,31 @@ export function ProfileForm({ mode, initial, industries, skills }: Props) {
                   placeholder="2018"
                 />
               </Field>
-              <Field label="Location">
+              <Field label="Location" hint="Places you on the alumni map">
                 <input
                   value={form.location}
-                  onChange={(e) => update("location", e.target.value)}
+                  onChange={(e) => onLocationTextChange(e.target.value)}
                   className={inputClass}
                   placeholder="Bengaluru, IN"
                 />
               </Field>
+            </div>
+            <div>
+              <p className="mb-2 text-xs text-muted">Click the map to mark your location.</p>
+              <LocationPickerMap
+                latitude={form.latitude}
+                longitude={form.longitude}
+                onChange={onPinChange}
+              />
+              {pinPlaced && (
+                <button
+                  type="button"
+                  onClick={() => onPinChange(null)}
+                  className="mt-2 text-sm font-medium text-coral hover:text-coral-deep"
+                >
+                  Remove pin
+                </button>
+              )}
             </div>
           </section>
         )}
@@ -447,6 +587,26 @@ function Field({
       {children}
     </label>
   );
+}
+
+function hasPin(latitude: number | null, longitude: number | null): boolean {
+  return (
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude)
+  );
+}
+
+async function resolveCoordinates(form: ProfileFormData): Promise<GeocodeResult | null> {
+  if (hasPin(form.latitude, form.longitude)) {
+    return { latitude: form.latitude as number, longitude: form.longitude as number };
+  }
+
+  const location = form.location.trim();
+  if (!location) return null;
+
+  return geocodeLocation(location);
 }
 
 const inputClass =

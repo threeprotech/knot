@@ -9,6 +9,7 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/directory";
+  const nextQuery = next !== "/directory" ? `?next=${encodeURIComponent(next)}` : "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -142,14 +143,14 @@ export function AuthForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         {isSignUp ? (
           <>
             Already a member?{" "}
-            <Link href="/auth/sign-in" className="font-medium text-coral hover:text-coral-deep">
+            <Link href={`/auth/sign-in${nextQuery}`} className="font-medium text-coral hover:text-coral-deep">
               Sign in
             </Link>
           </>
         ) : (
           <>
             New here?{" "}
-            <Link href="/auth/sign-up" className="font-medium text-coral hover:text-coral-deep">
+            <Link href={`/auth/sign-up${nextQuery}`} className="font-medium text-coral hover:text-coral-deep">
               Join Knot
             </Link>
           </>

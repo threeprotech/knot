@@ -24,7 +24,11 @@ export type Profile = {
   headline: string | null;
   bio: string | null;
   graduation_year: number | null;
+  last_class?: string | null;
+  last_division?: string | null;
   location: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   industry_id: string | null;
   avatar_url: string | null;
   role?: ProfileRole;
@@ -61,6 +65,13 @@ export type Alert = {
   updated_at: string;
 };
 
+export type MapPin = {
+  id: string;
+  full_name: string;
+  latitude: number;
+  longitude: number;
+};
+
 export type ProfileFormData = {
   full_name: string;
   email: string;
@@ -69,8 +80,22 @@ export type ProfileFormData = {
   headline: string;
   bio: string;
   graduation_year: string;
+  last_class: string;
+  last_division: string;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   industry_id: string;
   skill_ids: string[];
   avatar_url: string;
 };
+
+export function formatClassDivision(
+  lastClass?: string | null,
+  lastDivision?: string | null,
+): string | null {
+  const cls = lastClass?.trim() || "";
+  const div = lastDivision?.trim() || "";
+  if (cls && div) return `${cls} - ${div}`;
+  return cls || div || null;
+}

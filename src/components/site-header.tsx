@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { PublicMenu } from "@/components/public-menu";
 import { SignOutButton } from "@/components/sign-out-button";
 import { getIsAdmin } from "@/lib/admin";
 
@@ -38,6 +39,12 @@ export async function SiteHeader() {
                 Directory
               </Link>
               <Link
+                href="/map"
+                className="rounded-md px-2 py-1.5 text-sm font-medium text-ink-soft hover:bg-mist-deep/60 sm:px-2.5"
+              >
+                Map
+              </Link>
+              <Link
                 href="/events"
                 className="rounded-md px-2 py-1.5 text-sm font-medium text-ink-soft hover:bg-mist-deep/60 sm:px-2.5"
               >
@@ -62,8 +69,15 @@ export async function SiteHeader() {
           ) : (
             <>
               <Link
+                href="/map"
+                className="rounded-md px-2 py-1.5 text-sm font-medium text-ink-soft hover:bg-mist-deep/60 sm:px-2.5"
+              >
+                Map
+              </Link>
+              <PublicMenu />
+              <Link
                 href="/auth/sign-in"
-                className="rounded-md px-2.5 py-1.5 text-sm font-medium text-ink-soft hover:bg-mist-deep/60"
+                className="hidden rounded-md px-2.5 py-1.5 text-sm font-medium text-ink-soft hover:bg-mist-deep/60 sm:inline"
               >
                 Sign in
               </Link>

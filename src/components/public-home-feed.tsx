@@ -1,7 +1,33 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { AlertsStrip } from "@/components/alerts-strip";
 import { EventCard } from "@/components/event-card";
 import type { Alert, AlumniEvent } from "@/lib/types";
+
+function HomeFeedTab({
+  title,
+  tone,
+  children,
+}: {
+  title: string;
+  tone: "coral" | "ink";
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <h2
+        className={`relative z-10 w-full rounded-t-md px-4 py-3 font-display text-lg tracking-tight text-white sm:w-fit sm:px-5 sm:text-xl ${
+          tone === "coral" ? "bg-coral" : "bg-ink"
+        }`}
+      >
+        {title}
+      </h2>
+      <div className="relative -mt-px rounded-b-xl border-x border-b border-line/70 bg-white p-4 sm:rounded-tr-xl sm:border-t sm:p-5">
+        {children}
+      </div>
+    </section>
+  );
+}
 
 export function PublicHomeFeed({
   alerts,
@@ -14,38 +40,37 @@ export function PublicHomeFeed({
 
   return (
     <section className="border-t border-line/70 bg-surface">
-      <div className="mx-auto w-full max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-12 sm:px-8 sm:py-16">
         {alerts.length > 0 && (
           <div className="animate-fade-up">
-            <AlertsStrip alerts={alerts} />
+            <HomeFeedTab title="Alerts" tone="coral">
+              <AlertsStrip alerts={alerts} showLabel={false} />
+            </HomeFeedTab>
           </div>
         )}
 
         {events.length > 0 && (
-          <div className={alerts.length > 0 ? "mt-10" : undefined}>
-            <p className="text-sm font-medium uppercase tracking-[0.14em] text-coral">Upcoming</p>
-            <h2 className="mt-2 font-display text-3xl tracking-tight text-ink">Events</h2>
-            <p className="mt-2 max-w-lg text-muted">
-              Gatherings, showcases, and moments for the Knot network.
-            </p>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {events.map((event, index) => (
-                <li
-                  key={event.id}
-                  className="animate-stagger"
-                  style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
-                >
-                  <EventCard event={event} />
-                </li>
-              ))}
-            </ul>
-            <p className="mt-6 text-sm text-muted">
-              Want the full calendar?{" "}
-              <Link href="/auth/sign-in?next=/events" className="font-medium text-coral hover:text-coral-deep">
-                Sign in
-              </Link>{" "}
-              to see member events too.
-            </p>
+          <div className="animate-fade-up" style={{ animationDelay: alerts.length > 0 ? "80ms" : undefined }}>
+            <HomeFeedTab title="Upcoming events" tone="ink">
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {events.map((event, index) => (
+                  <li
+                    key={event.id}
+                    className="animate-stagger"
+                    style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
+                  >
+                    <EventCard event={event} />
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 text-sm text-muted">
+                Want the full calendar?{" "}
+                <Link href="/auth/sign-in?next=/events" className="font-medium text-coral hover:text-coral-deep">
+                  Sign in
+                </Link>{" "}
+                to see member events too.
+              </p>
+            </HomeFeedTab>
           </div>
         )}
       </div>

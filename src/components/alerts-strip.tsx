@@ -1,7 +1,13 @@
 import Link from "next/link";
 import type { Alert } from "@/lib/types";
 
-export function AlertsStrip({ alerts }: { alerts: Alert[] }) {
+export function AlertsStrip({
+  alerts,
+  showLabel = true,
+}: {
+  alerts: Alert[];
+  showLabel?: boolean;
+}) {
   if (alerts.length === 0) return null;
 
   return (
@@ -9,8 +15,10 @@ export function AlertsStrip({ alerts }: { alerts: Alert[] }) {
       {alerts.map((alert) => {
         const inner = (
           <>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-coral">Alert</p>
-            <p className="mt-1 font-medium text-ink">{alert.title}</p>
+            {showLabel && (
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-coral">Alert</p>
+            )}
+            <p className={`font-medium text-ink ${showLabel ? "mt-1" : ""}`}>{alert.title}</p>
             {alert.body && <p className="mt-1 text-sm leading-relaxed text-ink-soft">{alert.body}</p>}
             {alert.link_url && (
               <span className="mt-1 inline-block text-sm font-medium text-coral">Open link →</span>

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/profile-form";
-import type { Industry, Skill } from "@/lib/types";
+import type { Industry, Profile, Skill } from "@/lib/types";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -21,23 +21,31 @@ export default async function ProfilePage() {
 
   if (!profile) redirect("/onboarding");
 
+  const row = profile as Profile;
+  const latitude = typeof row.latitude === "number" ? row.latitude : null;
+  const longitude = typeof row.longitude === "number" ? row.longitude : null;
+
   return (
     <ProfileForm
       mode="edit"
       industries={(industries as Industry[]) || []}
       skills={(skills as Skill[]) || []}
       initial={{
-        full_name: profile.full_name || "",
-        email: profile.email || user.email || "",
-        phone: profile.phone || "",
-        linkedin_url: profile.linkedin_url || "",
-        headline: profile.headline || "",
-        bio: profile.bio || "",
-        graduation_year: profile.graduation_year ? String(profile.graduation_year) : "",
-        location: profile.location || "",
-        industry_id: profile.industry_id || "",
+        full_name: row.full_name || "",
+        email: row.email || user.email || "",
+        phone: row.phone || "",
+        linkedin_url: row.linkedin_url || "",
+        headline: row.headline || "",
+        bio: row.bio || "",
+        graduation_year: row.graduation_year ? String(row.graduation_year) : "",
+        last_class: row.last_class || "",
+        last_division: row.last_division || "",
+        location: row.location || "",
+        latitude,
+        longitude,
+        industry_id: row.industry_id || "",
         skill_ids: (profileSkills || []).map((ps) => ps.skill_id),
-        avatar_url: profile.avatar_url || "",
+        avatar_url: row.avatar_url || "",
       }}
     />
   );

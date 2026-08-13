@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/avatar";
-import type { Skill, SkillCategory } from "@/lib/types";
+import { formatClassDivision, type Skill, type SkillCategory } from "@/lib/types";
 
 const CATEGORIES: SkillCategory[] = ["Technical", "Soft", "Domain"];
 
@@ -42,6 +42,8 @@ export default async function AlumniDetailPage({
     skills: skills.filter((s) => s.category === category),
   })).filter((g) => g.skills.length > 0);
 
+  const classDivision = formatClassDivision(profile.last_class, profile.last_division);
+
   return (
     <article className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       <Link
@@ -61,6 +63,7 @@ export default async function AlumniDetailPage({
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
             {profile.industries?.name && <span>{profile.industries.name}</span>}
             {profile.location && <span>{profile.location}</span>}
+            {classDivision && <span>{classDivision}</span>}
             {profile.graduation_year && <span>Class of {profile.graduation_year}</span>}
           </div>
         </div>
